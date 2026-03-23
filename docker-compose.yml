@@ -31,6 +31,7 @@ services:
       - API_URL=https://jsonplaceholder.typicode.com/posts
       - DB_URL=postgresql://user:password@db:5432/devopsdb
       - POLL_INTERVAL=5
+      - WORKER_ENABLED=true
     ports:
       - "8080:8080"
     depends_on:
@@ -40,7 +41,7 @@ services:
     networks:
       - devops_network
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/api/health')"]
+      test: ["CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8080/api/health', timeout=5)\""]
       interval: 30s
       timeout: 10s
       retries: 3
