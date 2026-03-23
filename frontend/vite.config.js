@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  
   server: {
     host: '0.0.0.0',
     port: 5173,
-    // ✅ Proxy for local development
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -15,27 +15,16 @@ export default defineConfig({
       }
     }
   },
+
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          axios: ['axios']
-        }
-      }
-    }
+    minify: 'esbuild'
+    // ✅ removed manualChunks
   },
+
   preview: {
     port: 5173,
-    host: '0.0.0.0',
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      }
-    }
+    host: '0.0.0.0'
   }
 })
