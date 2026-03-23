@@ -1,39 +1,74 @@
-version: "3.8"
+version: '3.8'
 
 services:
+  # PostgreSQL Database
   db:
-    image: postgres
-    container_name: postgres-db
+    image: postgres:15-alpine
+    container_name: devops_db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: devopsdb
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d devopsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devops_network
 
+  # Backend API
   api:
-    build: ./backend
-    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devops_api
+    environment:
+      - API_URL=https://jsonplaceholder.typicode.com/posts
+      - DB_URL=postgresql://user:password@db:5432/devopsdb
+      - POLL_INTERVAL=5
     ports:
       - "8080:8080"
     depends_on:
-      - db
-    environment:
-      DB_URL: postgresql://user:password@db:5432/devopsdb
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  worker:
-    build: ./backend
-    container_name: worker
-    command: ["python", "app/worker.py"]
-    depends_on:
-      - db
-    environment:
-      DB_URL: postgresql://user:password@db:5432/devopsdb
-
+  # Frontend
   frontend:
-    build: ./frontend
-    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devops_frontend
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - api
+    restart: unless-stopped
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  devops_network:
+    driver: bridge
