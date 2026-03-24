@@ -19,4 +19,7 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          env:
+            - name: DB_URL
+              value: "postgresql://user:password@postgres-service:5432/devopsdb"
   replicas: 3    
