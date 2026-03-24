@@ -5,12 +5,14 @@ from app.db import engine, Base
 import threading
 from app.worker import start_worker
 from sqlalchemy import inspect
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(
     title="DevOps Load Testing API",
     description="API for AWS Auto Scaling Load Testing",
     version="1.0.0"
 )
+Instrumentator().instrument(app).expose(app)
 
 # ✅ CORS Configuration for frontend
 app.add_middleware(
