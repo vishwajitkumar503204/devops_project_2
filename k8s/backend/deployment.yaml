@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-Deployment
+  labels:
+    app: backend 
+spec:
+  selector:
+    matchLabels: 
+      app: backend
+  template:
+    metadata: 
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: vishwajitkumar503/devops_project_2_backend:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+  replicas: 3    
